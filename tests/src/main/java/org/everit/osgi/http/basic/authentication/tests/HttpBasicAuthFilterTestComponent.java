@@ -169,5 +169,7 @@ public class HttpBasicAuthFilterTestComponent {
                 HttpServletResponse.SC_UNAUTHORIZED, authenticatedResourceId);
         assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(username + password)),
                 HttpServletResponse.SC_UNAUTHORIZED, authenticatedResourceId);
+        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(username + ":" + password + "1")),
+                HttpServletResponse.SC_UNAUTHORIZED, authenticatedResourceId);
     }
 }
