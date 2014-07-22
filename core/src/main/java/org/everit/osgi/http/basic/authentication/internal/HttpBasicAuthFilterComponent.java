@@ -53,10 +53,10 @@ import org.osgi.service.log.LogService;
                 value = HttpBasicAuthFilterConstants.DEFAULT_RANKING),
         @Property(name = HttpBasicAuthFilterConstants.PROP_REALM,
                 value = HttpBasicAuthFilterConstants.DEFAULT_REALM),
-        @Property(name = HttpBasicAuthFilterConstants.PROP_AUTHENTICATOR_TARGET),
-        @Property(name = HttpBasicAuthFilterConstants.PROP_RESOURCE_ID_RESOLVER_TARGET),
-        @Property(name = HttpBasicAuthFilterConstants.PROP_AUTHENTICATION_PROPAGATOR_TARGET),
-        @Property(name = HttpBasicAuthFilterConstants.PROP_LOG_SERVICE_TARGET),
+        @Property(name = HttpBasicAuthFilterConstants.PROP_AUTHENTICATOR),
+        @Property(name = HttpBasicAuthFilterConstants.PROP_RESOURCE_ID_RESOLVER),
+        @Property(name = HttpBasicAuthFilterConstants.PROP_AUTHENTICATION_PROPAGATOR),
+        @Property(name = HttpBasicAuthFilterConstants.PROP_LOG_SERVICE),
 })
 public class HttpBasicAuthFilterComponent {
 
