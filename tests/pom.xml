@@ -24,12 +24,12 @@
 
   <parent>
     <groupId>org.everit.osgi</groupId>
-    <artifactId>org.everit.osgi.http.basic.authentication.parent</artifactId>
+    <artifactId>org.everit.osgi.authentication.basic.parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
 
   <groupId>org.everit.osgi</groupId>
-  <artifactId>org.everit.osgi.http.basic.authentication.tests</artifactId>
+  <artifactId>org.everit.osgi.authentication.basic.tests</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
   <packaging>bundle</packaging>
@@ -69,7 +69,7 @@
               liquibase.schema;filter:="(name=org.everit.osgi.authentication.simple)"
             </Require-Capability>
             <Provide-Capability>
-              liquibase.schema;name=org.everit.osgi.http.basic.authentication;resource=/META-INF/liquibase/http.basic.authentication.liquibase.xml
+              liquibase.schema;name=org.everit.osgi.authentication.basic;resource=/META-INF/liquibase/authentication.basic.liquibase.xml
             </Provide-Capability>
             <EOSGi-TestNum>2</EOSGi-TestNum>
           </instructions>
@@ -194,37 +194,6 @@
       <artifactId>osgi-over-slf4j</artifactId>
       <version>1.7.7</version>
     </dependency>
-
-<!--     <dependency> -->
-<!--       <groupId>org.eclipse.jetty.osgi</groupId> -->
-<!--       <artifactId>jetty-osgi-boot</artifactId> -->
-<!--       <version>9.1.0.v20131115</version> -->
-<!--       <exclusions> -->
-<!--         <exclusion> -->
-<!--           <artifactId>jetty-annotations</artifactId> -->
-<!--           <groupId>org.eclipse.jetty</groupId> -->
-<!--         </exclusion> -->
-<!--         <exclusion> -->
-<!--           <artifactId>org.eclipse.osgi</artifactId> -->
-<!--           <groupId>org.eclipse.osgi</groupId> -->
-<!--         </exclusion> -->
-<!--         <exclusion> -->
-<!--           <artifactId>org.eclipse.osgi.services</artifactId> -->
-<!--           <groupId>org.eclipse.osgi</groupId> -->
-<!--         </exclusion> -->
-<!--       </exclusions> -->
-<!--     </dependency> -->
-<!--     <dependency> -->
-<!--       <groupId>org.eclipse.jetty.osgi</groupId> -->
-<!--       <artifactId>jetty-httpservice</artifactId> -->
-<!--       <version>9.1.0.v20131115</version> -->
-<!--       <exclusions> -->
-<!--         <exclusion> -->
-<!--           <artifactId>org.eclipse.osgi</artifactId> -->
-<!--           <groupId>org.eclipse.osgi</groupId> -->
-<!--         </exclusion> -->
-<!--       </exclusions> -->
-<!--     </dependency> -->
 
     <dependency>
       <groupId>org.ow2.spec.osgi</groupId>
@@ -401,7 +370,7 @@
     </dependency>
     <dependency>
       <groupId>org.everit.osgi</groupId>
-      <artifactId>org.everit.osgi.http.basic.authentication</artifactId>
+      <artifactId>org.everit.osgi.authentication.basic</artifactId>
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
 

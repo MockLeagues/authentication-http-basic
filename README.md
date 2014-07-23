@@ -1,4 +1,4 @@
-http-basic-authentication
-=========================
+authentication-basic
+====================
 
 HTTP Basic Authentication Servlet Filter.

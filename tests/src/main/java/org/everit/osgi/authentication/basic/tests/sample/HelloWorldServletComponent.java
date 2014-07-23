@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - HTTP Basic Authentication Tests.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.osgi.http.basic.authentication.tests.sample;
+package org.everit.osgi.authentication.basic.tests.sample;
 
 import java.io.IOException;
 import java.io.PrintWriter;
