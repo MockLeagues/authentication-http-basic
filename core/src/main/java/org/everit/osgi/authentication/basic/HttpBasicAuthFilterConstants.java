@@ -31,10 +31,6 @@ public final class HttpBasicAuthFilterConstants {
 
     public static final String PROP_REALM = "realm";
 
-    public static final String PROP_PATTERN = "pattern";
-
-    public static final String PROP_CONTEXT_ID = "contextId";
-
     public static final String PROP_RANKING = "ranking";
 
     public static final String PROP_AUTHENTICATOR = "authenticator.target";

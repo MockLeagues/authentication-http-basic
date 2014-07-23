@@ -28,9 +28,9 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.everit.osgi.authentication.basic.HttpBasicAuthFilterConstants;
 import org.everit.osgi.authentication.context.AuthenticationPropagator;
 import org.everit.osgi.authenticator.Authenticator;
-import org.everit.osgi.authentication.basic.HttpBasicAuthFilterConstants;
 import org.everit.osgi.resource.resolver.ResourceIdResolver;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -79,8 +79,8 @@ public class HttpBasicAuthFilterComponent {
 
         String realm = getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_REALM);
         String filterName = getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_FILTER_NAME);
-        String pattern = getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_PATTERN);
-        String contextId = getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_CONTEXT_ID);
+        String pattern = getStringProperty(componentProperties, HttpWhiteboardConstants.PATTERN);
+        String contextId = getStringProperty(componentProperties, HttpWhiteboardConstants.CONTEXT_ID);
         Long ranking = Long.valueOf(getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_RANKING));
 
         Filter httpBasicAuthFilter = new HttpBasicAuthFilter(authenticator, resourceIdResolver,
