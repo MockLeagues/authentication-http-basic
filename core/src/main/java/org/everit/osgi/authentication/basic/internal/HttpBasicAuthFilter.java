@@ -131,7 +131,7 @@ public class HttpBasicAuthFilter implements Filter {
         Long authenticatedResourceId = resourceIdResolver.getResourceId(authenticatedPrincipal);
         if (authenticatedResourceId == null) {
             logService.log(LogService.LOG_INFO, "Authenticated username '" + username
-                    + "' (aka mapped principal'" + authenticatedPrincipal + "') cannot be mapped to Resource ID");
+                    + "' (aka mapped principal '" + authenticatedPrincipal + "') cannot be mapped to Resource ID");
             requestForAuthentication(response);
             return;
         }
