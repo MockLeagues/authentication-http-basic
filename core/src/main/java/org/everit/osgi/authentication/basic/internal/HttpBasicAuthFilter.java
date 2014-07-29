@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Base64.Decoder;
+import java.util.Optional;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -120,16 +121,16 @@ public class HttpBasicAuthFilter implements Filter {
         String password = usernamePassword.substring(separatorIndex + 1);
 
         // Authentication
-        String authenticatedPrincipal = authenticator.authenticate(username, password);
-        if (authenticatedPrincipal == null) {
+        Optional<String> authenticatedPrincipal = authenticator.authenticate(username, password);
+        if (!authenticatedPrincipal.isPresent()) {
             logService.log(LogService.LOG_INFO, "Failed to authenticate username '" + username + "'.");
             requestForAuthentication(response);
             return;
         }
 
         // Resource ID mapping
-        Long authenticatedResourceId = resourceIdResolver.getResourceId(authenticatedPrincipal);
-        if (authenticatedResourceId == null) {
+        Optional<Long> authenticatedResourceId = resourceIdResolver.getResourceId(authenticatedPrincipal.get());
+        if (!authenticatedResourceId.isPresent()) {
             logService.log(LogService.LOG_INFO, "Authenticated username '" + username
                     + "' (aka mapped principal '" + authenticatedPrincipal + "') cannot be mapped to Resource ID");
             requestForAuthentication(response);
@@ -137,7 +138,7 @@ public class HttpBasicAuthFilter implements Filter {
         }
 
         // Execute authenticated process
-        Exception exception = authenticationPropagator.runAs(authenticatedResourceId, () -> {
+        Exception exception = authenticationPropagator.runAs(authenticatedResourceId.get(), () -> {
             try {
                 chain.doFilter(request, response);
                 return null;
