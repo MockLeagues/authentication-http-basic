@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - HTTP Basic Authentication.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.osgi.authentication.basic;
+package org.everit.osgi.authentication.http.basic;
 
 /**
  * Constants of the HTTP Basic Authentication Filter component.
@@ -25,7 +25,7 @@ public final class HttpBasicAuthFilterConstants {
      * The service factory PID of the HTTP Basic Authentication Filter component.
      */
     public static final String SERVICE_FACTORYPID_HTTP_BASIC_AUTH =
-            "org.everit.osgi.authentication.basic.HttpBasicAuthenticationFilter";
+            "org.everit.osgi.authentication.http.basic.HttpBasicAuthenticationFilter";
 
     public static final String PROP_FILTER_NAME = "filterName";
 

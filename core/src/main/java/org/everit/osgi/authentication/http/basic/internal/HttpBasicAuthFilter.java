@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - HTTP Basic Authentication.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.osgi.authentication.basic.internal;
+package org.everit.osgi.authentication.http.basic.internal;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

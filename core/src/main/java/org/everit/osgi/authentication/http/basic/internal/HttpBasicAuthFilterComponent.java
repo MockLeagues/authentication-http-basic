@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - HTTP Basic Authentication.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.osgi.authentication.basic.internal;
+package org.everit.osgi.authentication.http.basic.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -28,7 +28,7 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.everit.osgi.authentication.basic.HttpBasicAuthFilterConstants;
+import org.everit.osgi.authentication.http.basic.HttpBasicAuthFilterConstants;
 import org.everit.osgi.authentication.context.AuthenticationPropagator;
 import org.everit.osgi.authenticator.Authenticator;
 import org.everit.osgi.resource.resolver.ResourceIdResolver;
