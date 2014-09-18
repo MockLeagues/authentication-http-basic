@@ -16,6 +16,9 @@ following modules:
  - [authentication-context-api][5]: to execute an authenticated process in the 
  name of the authenticated and mapped Resource ID
 
+#Concept
+Full authentication concept is available on blog post [Everit Authentication][1].
+
 [1]: http://everitorg.wordpress.com/2014/07/31/everit-authentication/
 [2]: http://en.wikipedia.org/wiki/Basic_access_authentication
 [3]: https://github.com/everit-org/authenticator-api
