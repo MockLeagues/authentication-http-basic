@@ -24,12 +24,15 @@ import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.Map;
 
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -42,6 +45,10 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.everit.osgi.authentication.context.AuthenticationContext;
 import org.everit.osgi.authentication.simple.SimpleSubject;
 import org.everit.osgi.authentication.simple.SimpleSubjectManager;
@@ -50,22 +57,29 @@ import org.everit.osgi.resource.ResourceService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.http.HttpService;
 
-@Component(name = "HttpBasicAuthFilterTest", immediate = true, configurationFactory = false,
-        policy = ConfigurationPolicy.OPTIONAL)
+@Component(name = "HttpBasicAuthFilterTest", metatype = true, configurationFactory = true,
+        policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Properties({
         @Property(name = TestRunnerConstants.SERVICE_PROPERTY_TESTRUNNER_ENGINE_TYPE, value = "junit4"),
         @Property(name = TestRunnerConstants.SERVICE_PROPERTY_TEST_ID, value = "HttpBasicAuthFilterTest"),
-        @Property(name = "httpService.target", value = "(org.osgi.service.http.port=*)"),
         @Property(name = "setSimpleSubjectManager.target"),
-        @Property(name = "authenticationContext.target")
+        @Property(name = "authenticationContext.target"),
+        @Property(name = "helloWorldServlet.target"),
+        @Property(name = "httpBasicAuthenticationFilter.target")
 })
 @Service(value = HttpBasicAuthFilterTestComponent.class)
 public class HttpBasicAuthFilterTestComponent {
 
-    @Reference(bind = "setHttpService")
-    private HttpService httpService;
+    private static final String HTTP_BASIC_AUTH_FILTER_PATTERN = "/hello/secure";
+
+    private static final String SECURE_HELLO_WORLD_ALIAS = "/hello/secure";
+
+    private static final String PUBLIC_HELLO_WORLD_ALIAS = "/hello";
+
+    private static final String USERNAME = "Aladdin";
+
+    private static final String PASSWORD = "open sesame";
 
     @Reference(bind = "setSimpleSubjectManager")
     private SimpleSubjectManager simpleSubjectManager;
@@ -76,29 +90,47 @@ public class HttpBasicAuthFilterTestComponent {
     @Reference(bind = "setAuthenticationContext")
     private AuthenticationContext authenticationContext;
 
-    private int port;
+    @Reference(bind = "setHelloWorldServlet")
+    private Servlet helloWorldServlet;
+
+    @Reference(bind = "setHttpBasicAuthenticationFilter")
+    private Filter httpBasicAuthenticationFilter;
 
     private String publicUrl;
 
     private String secureUrl;
 
-    private String username = "Aladdin";
-
-    private String password = "open sesame";
-
     private long authenticatedResourceId;
 
     private long defaultResourceId;
 
+    private Server testServer;
+
     @Activate
     public void activate(final BundleContext context, final Map<String, Object> componentProperties)
             throws Exception {
-        publicUrl = "http://localhost:" + port + "/hello";
-        secureUrl = "http://localhost:" + port + "/hello/secure";
+        testServer = new Server(0);
+        ServletContextHandler servletContextHandler = new ServletContextHandler();
+        testServer.setHandler(servletContextHandler);
+
+        servletContextHandler.addServlet(
+                new ServletHolder("publichelloWorld", helloWorldServlet), PUBLIC_HELLO_WORLD_ALIAS);
+        servletContextHandler.addServlet(
+                new ServletHolder("securehelloWorld", helloWorldServlet), SECURE_HELLO_WORLD_ALIAS);
+        servletContextHandler.addFilter(
+                new FilterHolder(httpBasicAuthenticationFilter), HTTP_BASIC_AUTH_FILTER_PATTERN, null);
+
+        testServer.start();
+
+        String testServerURI = testServer.getURI().toString();
+        String testServerURL = testServerURI.substring(0, testServerURI.length() - 1);
+
+        publicUrl = testServerURL + PUBLIC_HELLO_WORLD_ALIAS;
+        secureUrl = testServerURL + SECURE_HELLO_WORLD_ALIAS;
 
         long resourceId = resourceService.createResource();
-        simpleSubjectManager.delete(username);
-        SimpleSubject simpleSubject = simpleSubjectManager.create(resourceId, username, password);
+        simpleSubjectManager.delete(USERNAME);
+        SimpleSubject simpleSubject = simpleSubjectManager.create(resourceId, USERNAME, PASSWORD);
         authenticatedResourceId = simpleSubject.getResourceId();
         defaultResourceId = authenticationContext.getDefaultResourceId();
     }
@@ -124,6 +156,14 @@ public class HttpBasicAuthFilterTestComponent {
         }
     }
 
+    @Deactivate
+    public void deactivate() throws Exception {
+        if (testServer != null) {
+            testServer.stop();
+            testServer.destroy();
+        }
+    }
+
     private String encode(final String plain) {
         Encoder encoder = Base64.getEncoder();
         String encoded = encoder.encodeToString(plain.getBytes(StandardCharsets.UTF_8));
@@ -134,11 +174,12 @@ public class HttpBasicAuthFilterTestComponent {
         this.authenticationContext = authenticationContext;
     }
 
-    public void setHttpService(final HttpService httpService, final Map<String, Object> properties) {
-        this.httpService = httpService;
-        port = Integer.valueOf((String) properties.get("org.osgi.service.http.port"));
-        port--; // TODO port must be decremented because the port of the Server is less than the value of the service
-        // portperty queried above
+    public void setHelloWorldServlet(final Servlet helloWorldServlet) {
+        this.helloWorldServlet = helloWorldServlet;
+    }
+
+    public void setHttpBasicAuthenticationFilter(final Filter httpBasicAuthenticationFilter) {
+        this.httpBasicAuthenticationFilter = httpBasicAuthenticationFilter;
     }
 
     public void setResourceService(final ResourceService resourceService) {
@@ -157,17 +198,17 @@ public class HttpBasicAuthFilterTestComponent {
 
     @Test
     public void testAccessSecureUrl() throws IOException {
-        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(username + ":" + password)),
+        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(USERNAME + ":" + PASSWORD)),
                 HttpServletResponse.SC_OK, authenticatedResourceId);
         assertGet(secureUrl, null,
                 HttpServletResponse.SC_UNAUTHORIZED, null);
-        assertGet(secureUrl, new BasicHeader("Authorization", "BasiC " + encode(username + ":" + password)),
+        assertGet(secureUrl, new BasicHeader("Authorization", "BasiC " + encode(USERNAME + ":" + PASSWORD)),
                 HttpServletResponse.SC_UNAUTHORIZED, null);
-        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + "!@#$%^&*()_+\\|Đ<>#@{,.-"),
+        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + "1234567890ABCDEFGHI"),
                 HttpServletResponse.SC_UNAUTHORIZED, authenticatedResourceId);
-        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(username + password)),
+        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(USERNAME + PASSWORD)),
                 HttpServletResponse.SC_UNAUTHORIZED, authenticatedResourceId);
-        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(username + ":" + password + "1")),
+        assertGet(secureUrl, new BasicHeader("Authorization", "Basic " + encode(USERNAME + ":" + PASSWORD + "1")),
                 HttpServletResponse.SC_UNAUTHORIZED, authenticatedResourceId);
     }
 }

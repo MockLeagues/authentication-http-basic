@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
@@ -33,14 +32,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.everit.osgi.authentication.context.AuthenticationContext;
-import org.everit.osgi.http.context.simple.HttpContextSimpleConstants;
 
 @Component(name = "HelloWorldServletComponent", metatype = true,
         configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Properties({
-        @Property(name = HttpWhiteboardConstants.ALIAS),
-        @Property(name = HttpWhiteboardConstants.CONTEXT_ID,
-                value = HttpContextSimpleConstants.DEFAULT_CONTEXT_ID),
         @Property(name = "authenticationContext.target")
 })
 @Service(value = Servlet.class)
@@ -48,7 +43,7 @@ public class HelloWorldServletComponent extends HttpServlet {
 
     private static final long serialVersionUID = -5545883781165913751L;
 
-    @Reference
+    @Reference(bind = "setAuthenticationContext")
     private AuthenticationContext authenticationContext;
 
     @Override
@@ -58,6 +53,10 @@ public class HelloWorldServletComponent extends HttpServlet {
         resp.setContentType("text/plain");
         PrintWriter out = resp.getWriter();
         out.print(currentResourceId);
+    }
+
+    public void setAuthenticationContext(final AuthenticationContext authenticationContext) {
+        this.authenticationContext = authenticationContext;
     }
 
 }

@@ -27,11 +27,10 @@ public final class HttpBasicAuthFilterConstants {
     public static final String SERVICE_FACTORYPID_HTTP_BASIC_AUTH =
             "org.everit.osgi.authentication.http.basic.HttpBasicAuthenticationFilter";
 
-    public static final String PROP_FILTER_NAME = "filterName";
+    public static final String DEFAULT_SERVICE_DESCRIPTION_HTTP_BASIC_AUTH =
+            "Default HTTP Basic Authentication Filter";
 
     public static final String PROP_REALM = "realm";
-
-    public static final String PROP_RANKING = "ranking";
 
     public static final String PROP_AUTHENTICATOR = "authenticator.target";
 
@@ -40,26 +39,6 @@ public final class HttpBasicAuthFilterConstants {
     public static final String PROP_AUTHENTICATION_PROPAGATOR = "authenticationPropagator.target";
 
     public static final String PROP_LOG_SERVICE = "logService.target";
-
-    /**
-     * The default value of the {@link #PROP_FILTER_NAME}.
-     */
-    public static final String DEFAULT_FILTER_NAME = "HttpBasicAuthenticationFilter";
-
-    /**
-     * The default value of the {@link org.apache.felix.http.whiteboard.HttpWhiteboardConstants#PATTERN}.
-     */
-    public static final String DEFAULT_PATTERN = "/*";
-
-    /**
-     * The default value of the {@link org.apache.felix.http.whiteboard.HttpWhiteboardConstants#CONTEXT_ID}.
-     */
-    public static final String DEFAULT_CONTEXT_ID = "defaultContext";
-
-    /**
-     * The default value of the {@link #PROP_RANKING}.
-     */
-    public static final String DEFAULT_RANKING = "0";
 
     /**
      * The default value of the {@link #PROP_REALM}.

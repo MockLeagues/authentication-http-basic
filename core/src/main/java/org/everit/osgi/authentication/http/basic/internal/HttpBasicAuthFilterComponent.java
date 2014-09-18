@@ -16,41 +16,43 @@
  */
 package org.everit.osgi.authentication.http.basic.internal;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Base64.Decoder;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.http.whiteboard.HttpWhiteboardConstants;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.everit.osgi.authentication.http.basic.HttpBasicAuthFilterConstants;
+import org.apache.felix.scr.annotations.Service;
 import org.everit.osgi.authentication.context.AuthenticationPropagator;
+import org.everit.osgi.authentication.http.basic.HttpBasicAuthFilterConstants;
 import org.everit.osgi.authenticator.Authenticator;
 import org.everit.osgi.resource.resolver.ResourceIdResolver;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.log.LogService;
 
 @Component(name = HttpBasicAuthFilterConstants.SERVICE_FACTORYPID_HTTP_BASIC_AUTH, metatype = true,
         configurationFactory = true, policy = ConfigurationPolicy.REQUIRE)
 @Properties({
-        @Property(name = HttpBasicAuthFilterConstants.PROP_FILTER_NAME,
-                value = HttpBasicAuthFilterConstants.DEFAULT_FILTER_NAME),
-        @Property(name = HttpWhiteboardConstants.PATTERN,
-                value = HttpBasicAuthFilterConstants.DEFAULT_PATTERN),
-        @Property(name = HttpWhiteboardConstants.CONTEXT_ID,
-                value = HttpBasicAuthFilterConstants.DEFAULT_CONTEXT_ID),
-        @Property(name = HttpBasicAuthFilterConstants.PROP_RANKING,
-                value = HttpBasicAuthFilterConstants.DEFAULT_RANKING),
+        @Property(name = Constants.SERVICE_DESCRIPTION, propertyPrivate = false,
+                value = HttpBasicAuthFilterConstants.DEFAULT_SERVICE_DESCRIPTION_HTTP_BASIC_AUTH),
         @Property(name = HttpBasicAuthFilterConstants.PROP_REALM,
                 value = HttpBasicAuthFilterConstants.DEFAULT_REALM),
         @Property(name = HttpBasicAuthFilterConstants.PROP_AUTHENTICATOR),
@@ -58,7 +60,18 @@ import org.osgi.service.log.LogService;
         @Property(name = HttpBasicAuthFilterConstants.PROP_AUTHENTICATION_PROPAGATOR),
         @Property(name = HttpBasicAuthFilterConstants.PROP_LOG_SERVICE),
 })
-public class HttpBasicAuthFilterComponent {
+@Service
+public class HttpBasicAuthFilterComponent implements Filter {
+
+    private static final String CLIENT_HEADER_AUTHORIZATION = "Authorization";
+
+    private static final String CLEENT_HEADER_VALUE_PREFIX = "Basic ";
+
+    private static final String SERVER_HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
+
+    private static final String SERVER_HEADER_VALUE = "Basic realm=\"%1$s\"";
+
+    private static final String USERNAME_PASSWORD_SEPARATOR = ":";
 
     @Reference(bind = "setAuthenticator")
     private Authenticator authenticator;
@@ -72,33 +85,100 @@ public class HttpBasicAuthFilterComponent {
     @Reference(bind = "setLogService")
     private LogService logService;
 
-    private ServiceRegistration<Filter> httpBasicAuthFilterSR;
+    /**
+     * The realm attribute (case-insensitive) is required for all authentication schemes which issue a challenge. The
+     * realm value (case-sensitive), in combination with the canonical root URL of the server being accessed, defines
+     * the protection space. These realms allow the protected resources on a server to be partitioned into a set of
+     * protection spaces, each with its own authentication scheme and/or authorization database. The realm value is a
+     * string, generally assigned by the origin server, which may have additional semantics specific to the
+     * authentication scheme.
+     */
+    private String realm;
 
     @Activate
     public void activate(final BundleContext context, final Map<String, Object> componentProperties) throws Exception {
-
-        String realm = getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_REALM);
-        String filterName = getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_FILTER_NAME);
-        String pattern = getStringProperty(componentProperties, HttpWhiteboardConstants.PATTERN);
-        String contextId = getStringProperty(componentProperties, HttpWhiteboardConstants.CONTEXT_ID);
-        Long ranking = Long.valueOf(getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_RANKING));
-
-        Filter httpBasicAuthFilter = new HttpBasicAuthFilter(authenticator, resourceIdResolver,
-                authenticationPropagator, realm, logService);
-
-        Dictionary<String, Object> properties = new Hashtable<>();
-        properties.put(HttpBasicAuthFilterConstants.PROP_FILTER_NAME, filterName);
-        properties.put(HttpWhiteboardConstants.PATTERN, pattern);
-        properties.put(HttpWhiteboardConstants.CONTEXT_ID, contextId);
-        properties.put(Constants.SERVICE_RANKING, ranking);
-        httpBasicAuthFilterSR = context.registerService(Filter.class, httpBasicAuthFilter, properties);
+        realm = getStringProperty(componentProperties, HttpBasicAuthFilterConstants.PROP_REALM);
     }
 
-    @Deactivate
-    public void deactivate() {
-        if (httpBasicAuthFilterSR != null) {
-            httpBasicAuthFilterSR.unregister();
-            httpBasicAuthFilterSR = null;
+    @Override
+    public void destroy() {
+    }
+
+    @Override
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
+            throws IOException, ServletException {
+
+        // Check and get authorization request header
+        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+        String authorizationHeader = httpServletRequest.getHeader(CLIENT_HEADER_AUTHORIZATION);
+        if (authorizationHeader == null) {
+            logService.log(LogService.LOG_INFO, "Missing header parameter '" + CLIENT_HEADER_AUTHORIZATION + "'.");
+            requestForAuthentication(response);
+            return;
+        }
+        if (!authorizationHeader.startsWith(CLEENT_HEADER_VALUE_PREFIX)) {
+            logService.log(LogService.LOG_INFO, "Invalid value for header parameter '" + CLIENT_HEADER_AUTHORIZATION
+                    + "'.");
+            requestForAuthentication(response);
+            return;
+        }
+        String authorizationBase64 = authorizationHeader.substring(CLEENT_HEADER_VALUE_PREFIX.length());
+        Decoder mimeDecoder = Base64.getMimeDecoder();
+        byte[] decodedUsernamePassword;
+        try {
+            decodedUsernamePassword = mimeDecoder.decode(authorizationBase64);
+        } catch (IllegalArgumentException e) {
+            logService.log(LogService.LOG_INFO, "Invalid BASE64 value for '" + CLIENT_HEADER_AUTHORIZATION
+                    + "' header paramter.");
+            requestForAuthentication(response);
+            return;
+        }
+        String usernamePassword = new String(decodedUsernamePassword, StandardCharsets.UTF_8);
+        int separatorIndex = usernamePassword.indexOf(USERNAME_PASSWORD_SEPARATOR);
+        if (separatorIndex == -1) {
+            logService.log(LogService.LOG_INFO, "Username and password separator '" + USERNAME_PASSWORD_SEPARATOR
+                    + "' does not exists in header parameter '" + CLIENT_HEADER_AUTHORIZATION + "'.");
+            requestForAuthentication(response);
+            return;
+        }
+        String username = usernamePassword.substring(0, separatorIndex);
+        String password = usernamePassword.substring(separatorIndex + 1);
+
+        // Authentication
+        Optional<String> optionalAuthenticatedPrincipal = authenticator.authenticate(username, password);
+        if (!optionalAuthenticatedPrincipal.isPresent()) {
+            logService.log(LogService.LOG_INFO, "Failed to authenticate username '" + username + "'.");
+            requestForAuthentication(response);
+            return;
+        }
+
+        // Resource ID mapping
+        String authenticatedPrincipal = optionalAuthenticatedPrincipal.get();
+        Optional<Long> optionalAuthenticatedResourceId = resourceIdResolver.getResourceId(authenticatedPrincipal);
+        if (!optionalAuthenticatedResourceId.isPresent()) {
+            logService.log(LogService.LOG_INFO, "Authenticated username '" + username
+                    + "' (aka mapped principal '" + authenticatedPrincipal + "') cannot be mapped to Resource ID");
+            requestForAuthentication(response);
+            return;
+        }
+
+        // Execute authenticated process
+        long authenticatedResourceId = optionalAuthenticatedResourceId.get();
+        Exception exception = authenticationPropagator.runAs(authenticatedResourceId, () -> {
+            try {
+                chain.doFilter(request, response);
+                return null;
+            } catch (IOException | ServletException e) {
+                logService.log(LogService.LOG_ERROR, "Authenticated process execution failed", e);
+                return e;
+            }
+        });
+        if (exception != null) {
+            if (exception instanceof IOException) {
+                throw (IOException) exception;
+            } else if (exception instanceof ServletException) {
+                throw (ServletException) exception;
+            }
         }
     }
 
@@ -109,6 +189,16 @@ public class HttpBasicAuthFilterComponent {
             throw new ConfigurationException(propertyName, "property not defined");
         }
         return String.valueOf(value);
+    }
+
+    @Override
+    public void init(final FilterConfig filterConfig) throws ServletException {
+    }
+
+    private void requestForAuthentication(final ServletResponse servletResponse) {
+        HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+        httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        httpServletResponse.setHeader(SERVER_HEADER_WWW_AUTHENTICATE, String.format(SERVER_HEADER_VALUE, realm));
     }
 
     public void setAuthenticationPropagator(final AuthenticationPropagator authenticationPropagator) {
