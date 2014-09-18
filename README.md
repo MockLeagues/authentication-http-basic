@@ -13,8 +13,8 @@ following modules:
  - [authenticator-api][3]: to authentication the "Authorization" header value
  - [resource-resolver-api][4]: to map the authenticated username sent in the
  "Authorization" header to a Resource ID
- - [authentication-context-api][5]: to execute an authenticated process as the
- mapped Resource ID
+ - [authentication-context-api][5]: to execute an authenticated process in the 
+ name of the authenticated and mapped Resource ID
 
 [1]: http://everitorg.wordpress.com/2014/07/31/everit-authentication/
 [2]: http://en.wikipedia.org/wiki/Basic_access_authentication
