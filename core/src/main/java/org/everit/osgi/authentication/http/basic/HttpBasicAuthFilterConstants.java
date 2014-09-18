@@ -21,9 +21,6 @@ package org.everit.osgi.authentication.http.basic;
  */
 public final class HttpBasicAuthFilterConstants {
 
-    /**
-     * The service factory PID of the HTTP Basic Authentication Filter component.
-     */
     public static final String SERVICE_FACTORYPID_HTTP_BASIC_AUTH =
             "org.everit.osgi.authentication.http.basic.HttpBasicAuthenticationFilter";
 
@@ -32,6 +29,8 @@ public final class HttpBasicAuthFilterConstants {
 
     public static final String PROP_REALM = "realm";
 
+    public static final String DEFAULT_REALM = "default-realm";
+
     public static final String PROP_AUTHENTICATOR = "authenticator.target";
 
     public static final String PROP_RESOURCE_ID_RESOLVER = "resourceIdResolver.target";
@@ -39,11 +38,6 @@ public final class HttpBasicAuthFilterConstants {
     public static final String PROP_AUTHENTICATION_PROPAGATOR = "authenticationPropagator.target";
 
     public static final String PROP_LOG_SERVICE = "logService.target";
-
-    /**
-     * The default value of the {@link #PROP_REALM}.
-     */
-    public static final String DEFAULT_REALM = "my-realm";
 
     private HttpBasicAuthFilterConstants() {
     }
