@@ -18,9 +18,11 @@ following modules:
 
 #Concept
 Full authentication concept is available on blog post [Everit Authentication][1].
+Implemented components based on this concept are listed [here][6].
 
 [1]: http://everitorg.wordpress.com/2014/07/31/everit-authentication/
 [2]: http://en.wikipedia.org/wiki/Basic_access_authentication
 [3]: https://github.com/everit-org/authenticator-api
 [4]: https://github.com/everit-org/resource-resolver-api
 [5]: https://github.com/everit-org/authentication-context-api
+[6]: http://everitorg.wordpress.com/2014/07/31/everit-authentication-implemented-and-released-2/
