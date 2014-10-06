@@ -105,6 +105,7 @@
           <jacoco>
             <includes>org.everit.osgi.authentication.http.basic.*</includes>
             <excludes>org.everit.osgi.authentication.http.basic.tests.*</excludes>
+            <output>$${ if (System.getenv("EOSGI_STOP_AFTER_TESTS").equals("true")) "file"; else "tcpserver"; }</output>
           </jacoco>
           <environments>
             <environment>
