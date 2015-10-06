@@ -29,7 +29,7 @@
 
   <groupId>org.everit.authentication</groupId>
   <artifactId>org.everit.authentication.http.basic</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <packaging>bundle</packaging>
 
@@ -37,7 +37,7 @@
   <description>A HTTP Basic Authentication based on authenticator-api, resource-resolver and authentication-context-api</description>
 
   <properties>
-    <projectpath>authentication-basic</projectpath>
+    <projectpath>authentication-http-basic</projectpath>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
@@ -110,12 +110,12 @@
     <dependency>
       <groupId>org.everit.authenticator</groupId>
       <artifactId>org.everit.authenticator.api</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.everit.resource</groupId>
       <artifactId>org.everit.resource.resolver.api</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.everit.authentication</groupId>
