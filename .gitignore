@@ -2,3 +2,7 @@ target/
 .project
 .settings
 .classpath
+/.fbExcludeFilterFile
+/.pmd
+/.pmdruleset.xml
+/.checkstyle
